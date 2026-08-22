@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>2026.02. 미술사 실습 — 대시보드</title>
+  <style>
+    :root{
+      --bg:#0b0d12;
+      --panel:#111522;
+      --panel2:#0f1320;
+      --text:#e9eefc;
+      --muted:#aab4d6;
+      --line:#24304d;
+      --accent:#ffd24d;
+      --accent2:#a9c7ff;
+      --good:#31d0aa;
+      --warn:#ffb020;
+      --bad:#ff5d5d;
+      --chip:#1a2240;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    }
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      background: radial-gradient(1200px 600px at 10% 0%, rgba(169,199,255,.18), transparent 60%),
+                  radial-gradient(900px 500px at 90% 20%, rgba(255,210,77,.15), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+    a{ color: var(--accent2); }
+    .wrap{ max-width:1100px; margin:0 auto; padding:22px; }
+    header{
+      display:flex; gap:16px; align-items:flex-start; justify-content:space-between;
+      margin-bottom:16px;
+    }
+    .title h1{
+      margin:0 0 6px 0; font-size:22px; font-weight:800; letter-spacing:-.02em;
+    }
+    .subtitle{ color: var(--muted); font-size:13px; line-height:1.4; }
+    .right{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end;
+    }
+    .btn{
+      border:1px solid var(--line); background: rgba(255,255,255,.03);
+      color: var(--text); padding:9px 12px; border-radius:12px;
+      cursor:pointer; box-shadow: none;
+      font-size:13px;
+    }
+    .btn:hover{ border-color: rgba(169,199,255,.55); }
+    .btn.primary{
+      border-color: rgba(255,210,77,.55);
+      background: rgba(255,210,77,.10);
+    }
+    .btn.danger{
+      border-color: rgba(255,93,93,.55);
+      background: rgba(255,93,93,.10);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.3fr .7fr;
+      gap:14px;
+      margin-bottom:14px;
+    }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns:1fr; }
+      header{ flex-direction:column; align-items:stretch; }
+      .right{ justify-content:flex-start; }
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid rgba(36,48,77,.75);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .card h2{
+      font-size:14px; margin:0 0 10px 0; color: var(--muted); font-weight:700;
+      letter-spacing:.02em;
+      text-transform: none;
+    }
+    .kvs{
+      display:grid; grid-template-columns: 1fr 1fr; gap:10px;
+    }
+    .kv{
+      border:1px solid rgba(36,48,77,.65);
+      background: rgba(15,19,32,.55);
+      border-radius: 14px;
+      padding:10px 12px;
+      min-height:58px;
+    }
+    .kv .k{ color: var(--muted); font-size:12px; margin-bottom:6px; }
+    .kv .v{ font-size:13px; line-height:1.35; }
+    .kv .v small{ color: var(--muted); }
+    .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .chip{
+      background: rgba(26,34,64,.65);
+      border:1px solid rgba(36,48,77,.65);
+      color: var(--text);
+      padding:6px 10px;
+      border-radius: 999px;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .chip.active{
+      border-color: rgba(255,210,77,.65);
+      background: rgba(255,210,77,.14);
+    }
+
+    /* Tabs */
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+      margin: 14px 0 10px 0;
+    }
+    .tab{
+      padding:9px 12px;
+      border:1px solid rgba(36,48,77,.75);
+      border-radius: 999px;
+      background: rgba(255,255,255,.02);
+      font-size:13px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      border-color: rgba(169,199,255,.65);
+      background: rgba(169,199,255,.12);
+    }
+    .panel{ display:none; }
+    .panel.active{ display:block; }
+
+    /* Controls */
+    .controls{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      margin-bottom:10px;
+    }
+    .input{
+      flex: 1 1 240px;
+      display:flex; align-items:center; gap:8px;
+      border:1px solid rgba(36,48,77,.75);
+      background: rgba(15,19,32,.55);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .input input{
+      width:100%;
+      border:0;
+      outline:0;
+      background:transparent;
+      color: var(--text);
+      font-size:13px;
+    }
+    .select{
+      border:1px solid rgba(36,48,77,.75);
+      background: rgba(15,19,32,.55);
+      color: var(--text);
+      border-radius: 14px;
+      padding:10px 12px;
+      font-size:13px;
+    }
+
+    /* Table */
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid rgba(36,48,77,.75);
+      background: rgba(15,19,32,.35);
+    }
+    thead th{
+      text-align:left;
+      color: var(--muted);
+      font-size:12px;
+      padding:10px 10px;
+      border-bottom:1px solid rgba(36,48,77,.75);
+      background: rgba(17,21,34,.65);
+      position:sticky; top:0;
+    }
+    tbody td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(36,48,77,.45);
+      vertical-align: top;
+      font-size:13px;
+      line-height:1.35;
+    }
+    tbody tr:hover{ background: rgba(169,199,255,.07); }
+    .badge{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius: 999px;
+      font-size:12px;
+      border:1px solid rgba(36,48,77,.75);
+      background: rgba(26,34,64,.45);
+      color: var(--text);
+      margin-right:6px;
+    }
+    .badge.good{ border-color: rgba(49,208,170,.55); background: rgba(49,208,170,.12); }
+    .badge.warn{ border-color: rgba(255,176,32,.55); background: rgba(255,176,32,.12); }
+    .badge.bad{ border-color: rgba(255,93,93,.55); background: rgba(255,93,93,.12); }
+
+    /* Assignments */
+    .assign-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 900px){
+      .assign-grid{ grid-template-columns:1fr; }
+    }
+    .task{
+      border:1px solid rgba(36,48,77,.75);
+      background: rgba(15,19,32,.55);
+      border-radius: 14px;
+      padding:12px;
+    }
+    .task h3{
+      margin:0 0 8px 0;
+      font-size:14px;
+    }
+    .task .meta{ color: var(--muted); font-size:12px; margin-bottom:8px; }
+    .row{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .row label{ font-size:13px; }
+    .row textarea{
+      width:100%;
+      min-height:70px;
+      resize: vertical;
+      border:1px solid rgba(36,48,77,.75);
+      background: rgba(11,13,18,.55);
+      color: var(--text);
+      border-radius: 12px;
+      padding:10px;
+      font-size:13px;
+      outline: none;
+      margin-top:8px;
+      font-family: var(--sans);
+    }
+    .muted{ color: var(--muted); }
+    .footer-note{
+      margin-top:12px;
+      font-size:12px;
+      color: var(--muted);
+      line-height:1.5;
+    }
+    .hr{
+      height:1px;
+      background: rgba(36,48,77,.75);
+      margin: 10px 0;
+    }
+    .small{
+      font-size:12px;
+      color: var(--muted);
+    }
+    .mono{ font-family: var(--mono); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>2026.02. 미술사 실습 — 원페이지 대시보드</h1>
+        <div class="subtitle">
+          노션 페이지 내용을 바탕으로 만든 요약/주차 일정/과제 트래커 (로컬 저장: 브라우저 <span class="mono">localStorage</span>)
+        </div>
+      </div>
+      <div class="right">
+        <button class="btn primary" id="btnExport">상태 내보내기(JSON)</button>
+        <button class="btn" id="btnImport">상태 가져오기(JSON)</button>
+        <button class="btn danger" id="btnReset">저장 상태 초기화</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card" id="cardOverview">
+        <h2>강의 개요</h2>
+        <div class="kvs" id="kvs"></div>
+        <div class="chips" id="policyChips"></div>
+      </div>
+
+      <div class="card">
+        <h2>평가 방법 (절대평가)</h2>
+        <div class="kvs" id="gradingKvs"></div>
+        <div class="footer-note">
+          * 아래 “과제 트래커”는 기한 없이 체크/상태/메모만 관리합니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="tab1">요약</div>
+      <div class="tab" data-tab="tab2">주차별 일정</div>
+      <div class="tab" data-tab="tab3">과제 트래커</div>
+    </div>
+
+    <!-- 요약 -->
+    <section class="panel active" id="tab1">
+      <div class="card">
+        <h2>강의 목표 / 안내</h2>
+        <div id="courseDesc" style="font-size:13px; line-height:1.6;"></div>
+        <div class="hr"></div>
+        <div class="small" id="refs"></div>
+      </div>
+    </section>
+
+    <!-- 주차별 일정 -->
+    <section class="panel" id="tab2">
+      <div class="card">
+        <h2>주차별 일정 (검색/필터)</h2>
+        <div class="controls">
+          <div class="input" title="검색어(내용/비고)">
+            <span class="muted">검색</span>
+            <input id="q" placeholder="예: 유물, 글쓰기, 견학, 노트북, 공휴일…" />
+          </div>
+          <select class="select" id="sort">
+            <option value="week_asc">정렬: 주차 오름차순</option>
+            <option value="week_desc">정렬: 주차 내림차순</option>
+          </select>
+        </div>
+
+        <div class="chips" id="filters"></div>
+
+        <div style="margin-top:10px;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:70px;">주차</th>
+                <th style="width:120px;">일자</th>
+                <th>내용</th>
+                <th style="width:160px;">비고</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="footer-note" id="scheduleFootnotes"></div>
+      </div>
+    </section>
+
+    <!-- 과제 트래커 -->
+    <section class="panel" id="tab3">
+      <div class="card">
+        <h2>과제 트래커 (기한 없음)</h2>
+        <div class="assign-grid" id="assignments"></div>
+        <div class="footer-note">
+          상태/체크/메모는 이 브라우저에 저장됩니다. 노션 임베드에서 보더라도 동일 브라우저/기기에서만 유지됩니다.
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      임베드용 팁: 노션은 보안상 로컬 파일(<span class="mono">file://</span>)을 임베드할 수 없어서, GitHub Pages/Netlify 같은 곳에 올린 HTTPS URL이 필요합니다.
+    </div>
+  </div>
+
+<script>
+/** =========================
+ *  1) 원본 데이터(페이지에서 옮김)
+ *  - 필요하면 여기만 수정해도 전체 대시보드가 바뀝니다.
+ * ========================= */
+const DATA = {
+  course: {
+    title: "2026.02. 미술사 실습",
+    instructor: "이 경 화",
+    email: "podosy@snu.ac.kr",
+    phone: "010-2425-8708",
+    kakao: "",
+    description:
+`본 강의는 박물관, 미술관, 문화유산 관계 기관 등 미술사와 관계된 분야에 진출하고자 하는 수강생들이 관련 현장에서 필요로 하는 실무적 기반을 이해하도록 하는 것을 목표로 합니다.
+
+연구·전시·보존 등 문화유산 현장에서 이루어지는 주요 실무를 살펴보며, 예비 연구자이자 학예사로서 갖춰야 할 실질적인 역량을 기르는 데 주안점을 둡니다. 이를 위해 수강생들은 다양한 미술품 조사, 자료 수집 및 분석, 학술적·실무적 글쓰기, 연구·전시 기획안 작성 등을 현장 프로세스에 맞춰 실습합니다.
+
+아울러 국내 문화유산의 보존·관리 관련 기관과 제도를 살펴보고, 현장 전문가와의 만남을 통해 생생한 경험담을 공유하며 미래 전문가로서의 역할을 구체화해 나갈 것입니다.`,
+    references: [
+      "이내옥, 『문화재 다루기』, 열화당, 2022.",
+      "실반 바넷, 김리나 역, 『미술품 분석과 서술의 기초』, 시공사, 2025."
+    ],
+    grading: [
+      { name: "출석", value: 15 },
+      { name: "중간과제", value: 20 },
+      { name: "기말과제", value: 30 },
+      { name: "참여도", value: 15 },
+      { name: "수시과제", value: 20 },
+    ],
+    policies: [
+      "5주차 10월 5일은 공휴일로 수업은 전시 관람과 비평 과제로 대체함.",
+      "현장 견학 및 전문가 특강은 방문기관 및 강연자의 상황에 따라 일정이 변경될 수 있음.",
+      "생성형 AI를 학습 보조 도구로 활용 가능하나 실습 중에는 제한될 수 있음."
+    ]
+  },
+  schedule: [
+    { week:1, date:"9월 7일",  content:"강좌소개", note:"" },
+    { week:2, date:"9월 14일", content:"유물의 관찰과 조사 1\n- 회화, 전적 및 도자 조사 방법\n- 이내옥, pp. 106-142", note:"" },
+    { week:3, date:"9월 21일", content:"유물의 관찰과 조사 2\n- 불교 미술 조사 방법\n- 이내옥, pp. 67-106", note:"" },
+    { week:4, date:"9월 28일", content:"미술사 자료 읽기\n- 제발, 명문, 문헌 사료 읽기\n- 고연희, 2011.", note:"" },
+    { week:5, date:"10월 5일", content:"대체 공휴일*", note:"" },
+    { week:6, date:"10월 12일", content:"원전 자료의 검증 활용\n- 아카이브 활용", note:"" },
+    { week:7, date:"10월 19일", content:"위작과 감정\n- 사례 분석", note:"" },
+    { week:8, date:"10월 26일", content:"중간 과제 발표\n- 소논문의 proposal 작성하기", note:"" },
+    { week:9, date:"11월 2일",  content:"미술사 글쓰기의 기초 1\n- 바넷 1, 6, 7장", note:"노트북 지참" },
+    { week:10,date:"11월 9일",  content:"미술사 현장의 글쓰기 실습 1\n- 미술품의 종류에 따른 작품 해제 연습", note:"노트북 지참" },
+    { week:11,date:"11월 16일", content:"미술사 현장의 글쓰기 실습 2\n- 미술품의 종류에 따른 작품 해제 연습", note:"노트북 지참" },
+    { week:12,date:"11월 23일", content:"현장견학*\n- 리움미술관 견학과 전문가 면담 예정", note:"" },
+    { week:13,date:"11월 30일", content:"전시기획 및 디자인", note:"" },
+    { week:14,date:"12월 7일",  content:"전문가 특강(섭외)", note:"" },
+    { week:15,date:"12월 14일", content:"기말 세미나\n- 전시 기획안 발표 및 토론", note:"" },
+  ],
+  assignments: [
+    {
+      id:"midterm",
+      title:"중간과제",
+      meta:"소논문 제안서 작성 및 발표",
+      checklist:[
+        "주제 선정",
+        "선행연구/자료 목록화",
+        "연구 질문/가설 정리",
+        "목차(구성) 작성",
+        "발표자료(슬라이드) 준비"
+      ]
+    },
+    {
+      id:"final",
+      title:"기말과제",
+      meta:"전시 기획안 발표 및 토론",
+      checklist:[
+        "전시 주제/의도 정리",
+        "작품 리스트(후보) 구성",
+        "공간/동선/섹션 구성",
+        "작품 해제(라벨) 초안",
+        "발표자료(슬라이드) 준비"
+      ]
+    },
+    {
+      id:"ongoing",
+      title:"수시과제",
+      meta:"전시 관람 후 비평문 제출",
+      checklist:[
+        "전시 선택/방문",
+        "작품/전시 구성 메모",
+        "핵심 논점 정리",
+        "초고 작성",
+        "퇴고 및 제출"
+      ]
+    }
+  ]
+};
+
+/** =========================
+ *  2) 상태 저장 (localStorage)
+ * ========================= */
+const STORAGE_KEY = "arthistory_practicum_dashboard_v1";
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return { tasks:{}, notes:{} };
+    return JSON.parse(raw);
+  }catch(e){
+    return { tasks:{}, notes:{} };
+  }
+}
+function saveState(state){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+let STATE = loadState();
+
+/** =========================
+ *  3) 렌더: 상단 카드
+ * ========================= */
+function renderOverview(){
+  const kvs = document.getElementById("kvs");
+  const items = [
+    { k:"강의명", v: DATA.course.title },
+    { k:"강사", v: DATA.course.instructor },
+    { k:"이메일", v: `<a href="mailto:${DATA.course.email}">${DATA.course.email}</a>` },
+    { k:"전화", v: DATA.course.phone },
+    { k:"카카오", v: DATA.course.kakao ? DATA.course.kakao : "<small>(미기재)</small>" },
+    { k:"요약", v: "실무 기반 이해 · 조사/분석 · 글쓰기 · 연구/전시 기획 실습" }
+  ];
+  kvs.innerHTML = items.map(x => `
+    <div class="kv">
+      <div class="k">${x.k}</div>
+      <div class="v">${x.v}</div>
+    </div>
+  `).join("");
+
+  const gradingKvs = document.getElementById("gradingKvs");
+  gradingKvs.innerHTML = DATA.course.grading.map(g => `
+    <div class="kv">
+      <div class="k">${g.name}</div>
+      <div class="v"><b>${g.value}</b> <small>/ 100</small></div>
+    </div>
+  `).join("");
+
+  const policyChips = document.getElementById("policyChips");
+  policyChips.innerHTML = DATA.course.policies.map((p,i)=>`
+    <span class="chip" title="${escapeHtml(p)}">안내 ${i+1}</span>
+  `).join("");
+}
+
+/** =========================
+ *  4) 탭: 요약
+ * ========================= */
+function renderSummaryTab(){
+  document.getElementById("courseDesc").innerHTML =
+    DATA.course.description.split("\n\n").map(par => `<p style="margin:0 0 10px 0;">${escapeHtml(par)}</p>`).join("");
+
+  document.getElementById("refs").innerHTML =
+    "<b class='muted'>참고문헌</b><br>" + DATA.course.references.map(r => `• ${escapeHtml(r)}`).join("<br>");
+}
+
+/** =========================
+ *  5) 탭: 주차별 일정 (검색/필터)
+ * ========================= */
+const FILTERS = [
+  { id:"laptop", label:"노트북 지참", match:(row)=> (row.note||"").includes("노트북") },
+  { id:"holiday", label:"공휴일/휴강", match:(row)=> (row.content||"").includes("공휴일") || (row.content||"").includes("대체") },
+  { id:"field", label:"현장견학", match:(row)=> (row.content||"").includes("현장견학") || (row.content||"").includes("견학") },
+  { id:"special", label:"특강/섭외", match:(row)=> (row.content||"").includes("특강") || (row.content||"").includes("섭외") },
+  { id:"writing", label:"글쓰기", match:(row)=> (row.content||"").includes("글쓰기") },
+  { id:"research", label:"조사/관찰", match:(row)=> (row.content||"").includes("관찰") || (row.content||"").includes("조사") },
+];
+
+let activeFilterIds = new Set();
+
+function renderFilterChips(){
+  const filters = document.getElementById("filters");
+  filters.innerHTML = FILTERS.map(f => `
+    <span class="chip ${activeFilterIds.has(f.id) ? "active" : ""}" data-filter="${f.id}">
+      ${f.label}
+    </span>
+  `).join("");
+
+  filters.querySelectorAll(".chip").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const id = el.getAttribute("data-filter");
+      if(activeFilterIds.has(id)) activeFilterIds.delete(id);
+      else activeFilterIds.add(id);
+      renderFilterChips();
+      renderScheduleTable();
+    });
+  });
+}
+
+function renderScheduleTable(){
+  const q = (document.getElementById("q").value || "").trim().toLowerCase();
+  const sort = document.getElementById("sort").value;
+
+  let rows = [...DATA.schedule];
+
+  // filter chips
+  if(activeFilterIds.size > 0){
+    rows = rows.filter(r => {
+      for(const id of activeFilterIds){
+        const f = FILTERS.find(x=>x.id===id);
+        if(f && f.match(r)) return true;
+      }
+      return false;
+    });
+  }
+
+  // search
+  if(q){
+    rows = rows.filter(r => {
+      const hay = `${r.week} ${r.date} ${r.content} ${r.note}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  // sort
+  rows.sort((a,b)=> sort==="week_desc" ? (b.week-a.week) : (a.week-b.week));
+
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = rows.map(r=>{
+    const badges = buildBadges(r);
+    return `
+      <tr>
+        <td><b>${r.week}</b></td>
+        <td>${escapeHtml(r.date)}</td>
+        <td>
+          ${badges}
+          <div style="white-space:pre-wrap; margin-top:6px;">${escapeHtml(r.content)}</div>
+        </td>
+        <td>${escapeHtml(r.note || "")}</td>
+      </tr>
+    `;
+  }).join("");
+
+  document.getElementById("scheduleFootnotes").innerHTML = `
+    <b class="muted">주석</b><br>
+    • 5주차(10월 5일) 공휴일: 수업은 전시 관람 + 비평 과제로 대체<br>
+    • 현장견학/특강은 기관·강연자 상황에 따라 변동 가능<br>
+    • 생성형 AI는 보조 도구로 활용 가능하나 실습 중 제한될 수 있음
+  `;
+}
+
+function buildBadges(row){
+  const b = [];
+  if((row.note||"").includes("노트북")) b.push(`<span class="badge warn">노트북</span>`);
+  if((row.content||"").includes("공휴일") || (row.content||"").includes("대체")) b.push(`<span class="badge bad">휴강/대체</span>`);
+  if((row.content||"").includes("현장견학") || (row.content||"").includes("견학")) b.push(`<span class="badge good">현장</span>`);
+  if((row.content||"").includes("특강") || (row.content||"").includes("섭외")) b.push(`<span class="badge warn">특강</span>`);
+  if((row.content||"").includes("발표")) b.push(`<span class="badge">발표</span>`);
+  return b.join("");
+}
+
+/** =========================
+ *  6) 탭: 과제 트래커
+ * ========================= */
+function getTaskKey(assignmentId, idx){ return `${assignmentId}::${idx}`; }
+function renderAssignments(){
+  const root = document.getElementById("assignments");
+  root.innerHTML = DATA.assignments.map(a => {
+    const noteVal = (STATE.notes[a.id] ?? "");
+    const rows = a.checklist.map((t, idx) => {
+      const key = getTaskKey(a.id, idx);
+      const checked = !!STATE.tasks[key];
+      return `
+        <div class="row" style="margin:6px 0;">
+          <label style="display:flex; gap:10px; align-items:flex-start;">
+            <input type="checkbox" data-taskkey="${key}" ${checked ? "checked":""} />
+            <span>${escapeHtml(t)}</span>
+          </label>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div class="task">
+        <h3>${escapeHtml(a.title)}</h3>
+        <div class="meta">${escapeHtml(a.meta)}</div>
+        <div>${rows}</div>
+        <textarea placeholder="메모(예: 참고 전시/자료/아이디어/피드백)…" data-noteid="${a.id}">${escapeHtml(noteVal)}</textarea>
+      </div>
+    `;
+  }).join("");
+
+  // bind
+  root.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener("change", ()=>{
+      const key = cb.getAttribute("data-taskkey");
+      STATE.tasks[key] = cb.checked;
+      saveState(STATE);
+    });
+  });
+  root.querySelectorAll("textarea").forEach(ta=>{
+    ta.addEventListener("input", ()=>{
+      const id = ta.getAttribute("data-noteid");
+      STATE.notes[id] = ta.value;
+      saveState(STATE);
+    });
+  });
+}
+
+/** =========================
+ *  7) 탭/버튼 이벤트 + 유틸
+ * ========================= */
+function escapeHtml(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function setupTabs(){
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById(tab.getAttribute("data-tab")).classList.add("active");
+    });
+  });
+}
+
+function setupControls(){
+  document.getElementById("q").addEventListener("input", renderScheduleTable);
+  document.getElementById("sort").addEventListener("change", renderScheduleTable);
+
+  document.getElementById("btnReset").addEventListener("click", ()=>{
+    if(!confirm("저장된 체크/메모 상태를 초기화할까요?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    STATE = loadState();
+    renderAssignments();
+  });
+
+  document.getElementById("btnExport").addEventListener("click", ()=>{
+    const blob = new Blob([JSON.stringify(STATE, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "dashboard_state.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("btnImport").addEventListener("click", async ()=>{
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if(!file) return;
+      const txt = await file.text();
+      try{
+        const obj = JSON.parse(txt);
+        if(!obj || typeof obj !== "object") throw new Error("invalid");
+        // 아주 단순 검증
+        STATE = {
+          tasks: obj.tasks && typeof obj.tasks === "object" ? obj.tasks : {},
+          notes: obj.notes && typeof obj.notes === "object" ? obj.notes : {}
+        };
+        saveState(STATE);
+        renderAssignments();
+        alert("가져오기 완료!");
+      }catch(e){
+        alert("가져오기 실패: JSON 형식을 확인해주세요.");
+      }
+    };
+    input.click();
+  });
+}
+
+/** =========================
+ *  Init
+ * ========================= */
+renderOverview();
+renderSummaryTab();
+setupTabs();
+setupControls();
+renderFilterChips();
+renderScheduleTable();
+renderAssignments();
+</script>
+</body>
+</html>
